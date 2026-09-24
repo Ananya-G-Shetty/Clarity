@@ -1,0 +1,47 @@
+﻿name: CI & Deployment Verification
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: Build, Lint & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: TypeScript Type Check
+        run: npx tsc --noEmit
+
+      - name: ESLint Code Quality Check
+        run: npm run lint
+
+      - name: Run Test Suite
+        run: npm test
+
+      - name: Verify Production Build
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Repository Size Discipline (< 10MB)
+        run: |
+          echo "=== Auditing Repository Footprint ==="
+          git count-objects -vH
+          CHECKOUT_SIZE=$(du -sh --exclude=node_modules --exclude=.next . | cut -f1)
+          echo "Clean checkout size: $CHECKOUT_SIZE"

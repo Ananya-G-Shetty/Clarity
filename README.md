@@ -1,4 +1,9 @@
-# Clarity — AI-Powered Legal Document Assistant
+﻿# Clarity — AI-Powered Legal Document Assistant
+
+[![CI & Deployment Verification](https://github.com/Ananya-G-Shetty/Clarity/actions/workflows/ci.yml/badge.svg)](https://github.com/Ananya-G-Shetty/Clarity/actions/workflows/ci.yml)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FAnanya-G-Shetty%2FClarity)
+[![Repository Size](https://img.shields.io/badge/repo%20size-%3C250KB-brightgreen.svg)](https://github.com/Ananya-G-Shetty/Clarity)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 > **Clarity** is a production-quality, AI-powered legal document assistant engineered for everyday users (tenants, employees, freelancers, and small business owners) to understand, compare, and navigate dense legal contracts like leases, employment agreements, NDAs, and service contracts — **without replacing a licensed attorney**.
 
@@ -36,13 +41,41 @@ Clarity implements a transparent, dual-engine design to ensure flawless evaluati
 
 ---
 
+## Continuous Deployment (CI/CD) with GitHub & Vercel
+
+Clarity is configured for **Continuous Integration & Continuous Deployment (CI/CD)**:
+
+### 1. Automated GitHub Actions CI
+Every `git push` to `main` or pull request automatically triggers the [.github/workflows/ci.yml](.github/workflows/ci.yml) workflow:
+- **Type Checking**: Runs `npx tsc --noEmit` to guarantee strict type safety.
+- **Linting**: Runs `npm run lint` for ESLint quality standards.
+- **Test Suite**: Runs `npm test` across all 7 unit and component test suites.
+- **Production Build**: Compiles Next.js 14 to verify zero build errors.
+- **Repository Size Check**: Verifies that the repo stays strictly below the 10 MB competition limit.
+
+### 2. Live One-Click Deployment to Vercel (Automatic Future Updates)
+Deploying Clarity live takes less than 60 seconds with **zero server maintenance**:
+
+1. Click the **[Deploy with Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FAnanya-G-Shetty%2FClarity)** button (or go to [vercel.com/new](https://vercel.com/new)).
+2. Sign in with your GitHub account and import the repository **`Ananya-G-Shetty/Clarity`**.
+3. *(Optional)* Add the `GEMINI_API_KEY` environment variable in the Vercel dashboard.
+4. Click **Deploy**. Vercel will build and assign you a global HTTPS production URL (e.g., `https://clarity-legal.vercel.app`).
+
+### 3. Automatic Updates on Future Edits
+Once connected to Vercel:
+- **Pushing code** (`git push origin main`) or **editing files directly on GitHub** will automatically trigger Vercel to rebuild and redeploy within ~45 seconds.
+- Every commit gets its own unique preview deployment.
+- No manual terminal commands or redeploy steps are ever required!
+
+---
+
 ## Repository Size Discipline (< 10MB Hard Limit)
 
 The repository strictly complies with the **10MB hard limit**:
 - `.gitignore` committed first, excluding `node_modules`, `.next`, build artifacts, and coverage.
 - Lightweight document dependencies (`mammoth`, `jspdf`, `pdf-parse`).
 - Compact pre-loaded sample documents (< 20KB each).
-- Verified via `git count-objects -vH` (Total size: < 3MB).
+- Verified via `git count-objects -vH` (Total size: ~200 KiB, < 0.25 MB).
 
 ---
 
@@ -65,8 +98,8 @@ Evaluators can click **"Load Sample Rental Lease"** or **"Load Sample Offer Lett
 ### 2. Installation
 ```bash
 # Clone the repository
-git clone https://github.com/<your-username>/clarity.git
-cd clarity
+git clone https://github.com/Ananya-G-Shetty/Clarity.git
+cd Clarity
 
 # Install dependencies
 npm install
@@ -119,51 +152,55 @@ git count-objects -vH
 
 ```
 clarity/
+├── .github/
+│   └── workflows/
+│       └── ci.yml                     # Automated CI/CD pipeline (lint, test, build, size)
 ├── app/
 │   ├── api/
-│   │   ├── chat/route.ts            # Grounded document Q&A endpoint with citations
-│   │   ├── checklist/route.ts       # Pre-signing checklist & questions generator
-│   │   ├── compare/route.ts         # Semantic contract comparison endpoint
-│   │   ├── engine-status/route.ts   # Live engine status disclosure API
-│   │   ├── parse/route.ts           # Secure file upload & extraction endpoint
-│   │   └── summarize/route.ts       # Executive summary & clause risk breakdown
-│   ├── globals.css                  # Tailwind styles, accessible focus, scrollbars
-│   ├── layout.tsx                   # Semantic layout, persistent disclaimer, skip-link
-│   └── page.tsx                     # Stateful workspace orchestrating all 5 views
+│   │   ├── chat/route.ts              # Grounded document Q&A endpoint with citations
+│   │   ├── checklist/route.ts         # Pre-signing checklist & questions generator
+│   │   ├── compare/route.ts           # Semantic contract comparison endpoint
+│   │   ├── engine-status/route.ts     # Live engine status disclosure API
+│   │   ├── parse/route.ts             # Secure file upload & extraction endpoint
+│   │   └── summarize/route.ts         # Executive summary & clause risk breakdown
+│   ├── globals.css                    # Tailwind styles, accessible focus, scrollbars
+│   ├── layout.tsx                     # Semantic layout, persistent disclaimer, skip-link
+│   └── page.tsx                       # Stateful workspace orchestrating all 5 views
 ├── components/
-│   ├── ApiKeyModal.tsx              # Google Gemini API key configuration modal
-│   ├── ChatWidget.tsx               # Strictly grounded Q&A with citations & aria-live
-│   ├── ChecklistExport.tsx          # Interactive checklist & jsPDF action pack exporter
-│   ├── ClauseCard.tsx               # Expandable clause, risk badge, plain translation
-│   ├── CompareView.tsx              # Side-by-side semantic comparison table
-│   ├── DisclaimerBanner.tsx         # Permanent legal disclaimer on every screen
-│   ├── GlossaryTerm.tsx             # Interactive plain-English legal term definition tooltip
-│   ├── JurisdictionSelector.tsx     # Contextual legal jurisdiction selector
-│   ├── LandingHero.tsx              # Welcoming starting page & value proposition
-│   ├── Navbar.tsx                   # Branding, engine status badge, tabs, key modal
-│   ├── RiskBadge.tsx                # Standard / Review / Red Flag WCAG AA badges
-│   ├── SummaryView.tsx              # Executive summary, risk gauge, clause list
-│   └── UploadDropzone.tsx           # Drag & drop upload + 1-click sample loaders
+│   ├── ApiKeyModal.tsx                # Google Gemini API key configuration modal
+│   ├── ChatWidget.tsx                 # Strictly grounded Q&A with citations & aria-live
+│   ├── ChecklistExport.tsx            # Interactive checklist & jsPDF action pack exporter
+│   ├── ClauseCard.tsx                 # Expandable clause, risk badge, plain translation
+│   ├── CompareView.tsx                # Side-by-side semantic comparison table
+│   ├── DisclaimerBanner.tsx           # Permanent legal disclaimer on every screen
+│   ├── GlossaryTerm.tsx               # Interactive plain-English legal term definition tooltip
+│   ├── JurisdictionSelector.tsx       # Contextual legal jurisdiction selector
+│   ├── LandingHero.tsx                # Welcoming starting page & value proposition
+│   ├── Navbar.tsx                     # Branding, engine status badge, tabs, key modal
+│   ├── RiskBadge.tsx                  # Standard / Review / Red Flag WCAG AA badges
+│   ├── SummaryView.tsx                # Executive summary, risk gauge, clause list
+│   └── UploadDropzone.tsx             # Drag & drop upload + 1-click sample loaders
 ├── lib/
-│   ├── gemini.ts                    # Gemini API client + resilient local fallback engine
-│   ├── glossary.ts                  # Comprehensive dictionary of legal terms
-│   ├── parser.ts                    # File allowlist validator, extractor & XSS sanitizer
-│   ├── pdf-generator.ts             # Client-side jsPDF exporter for checklist
-│   ├── prompts.ts                   # Centralized prompt templates & strict JSON schemas
-│   ├── rag.ts                       # Document chunker & section retriever for chat
-│   ├── rate-limit.ts                # In-memory sliding-window rate limiter
-│   └── sample-docs.ts               # Pre-loaded sample lease & offer contracts
+│   ├── gemini.ts                      # Gemini API client + resilient local fallback engine
+│   ├── glossary.ts                    # Comprehensive dictionary of legal terms
+│   ├── parser.ts                      # File allowlist validator, extractor & XSS sanitizer
+│   ├── pdf-generator.ts               # Client-side jsPDF exporter for checklist
+│   ├── prompts.ts                     # Centralized prompt templates & strict JSON schemas
+│   ├── rag.ts                         # Document chunker & section retriever for chat
+│   ├── rate-limit.ts                  # In-memory sliding-window rate limiter
+│   └── sample-docs.ts                 # Pre-loaded sample lease & offer contracts
 ├── types/
-│   └── index.ts                     # Comprehensive TypeScript definitions
+│   └── index.ts                       # Comprehensive TypeScript definitions
 ├── __tests__/
-│   ├── unit/                        # Unit tests for parser, prompts, risk scoring
-│   └── components/                  # Component tests for clauses, compare, chat, errors
-├── e2e/                             # Playwright E2E test suite
-├── jest.config.js                   # Jest configuration with Next.js presets
-├── jest.setup.ts                    # DOM matchers and polyfills
-├── next.config.mjs                  # Security headers (CSP, X-Frame-Options)
-├── tailwind.config.ts               # Custom legal color palette & accessible tokens
-└── tsconfig.json                    # Strict TypeScript configuration
+│   ├── unit/                          # Unit tests for parser, prompts, risk scoring
+│   └── components/                    # Component tests for clauses, compare, chat, errors
+├── e2e/                               # Playwright E2E test suite
+├── jest.config.js                     # Jest configuration with Next.js presets
+├── jest.setup.ts                      # DOM matchers and polyfills
+├── next.config.mjs                    # Security headers (CSP, X-Frame-Options)
+├── tailwind.config.ts                 # Custom legal color palette & accessible tokens
+├── tsconfig.json                      # Strict TypeScript configuration
+└── vercel.json                        # Vercel deployment configuration
 ```
 
 ---
