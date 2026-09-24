@@ -1,4 +1,4 @@
-﻿# Clarity — AI-Powered Legal Document Assistant
+# Clarity — AI-Powered Legal Document Assistant
 
 [![CI & Deployment Verification](https://github.com/Ananya-G-Shetty/Clarity/actions/workflows/ci.yml/badge.svg)](https://github.com/Ananya-G-Shetty/Clarity/actions/workflows/ci.yml)
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FAnanya-G-Shetty%2FClarity)

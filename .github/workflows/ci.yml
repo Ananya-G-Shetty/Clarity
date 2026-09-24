@@ -1,4 +1,4 @@
-﻿name: CI & Deployment Verification
+name: CI & Deployment Verification
 
 on:
   push:
