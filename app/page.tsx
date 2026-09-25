@@ -222,7 +222,11 @@ export default function HomePage() {
 
         {/* Screen 4: Side-by-Side Semantic Compare */}
         {activeTab === 'compare' && (
-          <CompareView initialComparison={comparison} />
+          <CompareView
+            initialComparison={comparison}
+            uploadedDocText={documentText}
+            uploadedDocTitle={documentTitle}
+          />
         )}
 
         {/* Screen 5: Strictly Grounded Document Q&A Chat */}

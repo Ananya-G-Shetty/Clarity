@@ -12,26 +12,70 @@ import {
   HelpCircle,
   FileText,
   Loader2,
+  UploadCloud,
+  FileCheck,
 } from 'lucide-react';
 
 interface CompareViewProps {
   initialComparison?: ComparisonResult | null;
   onCompareRequest?: (docA: string, docB: string, nameA: string, nameB: string) => Promise<ComparisonResult | null>;
+  uploadedDocText?: string;
+  uploadedDocTitle?: string;
 }
 
 export function CompareView({
   initialComparison,
   onCompareRequest,
+  uploadedDocText,
+  uploadedDocTitle,
 }: CompareViewProps) {
   const [comparison, setComparison] = useState<ComparisonResult | null>(
     initialComparison || SAMPLE_COMPARISON_RESULT
   );
   const [loading, setLoading] = useState(false);
-  const [customDocA, setCustomDocA] = useState(SAMPLE_RENTAL_AGREEMENT_TEXT);
+  const [customDocA, setCustomDocA] = useState(uploadedDocText || SAMPLE_RENTAL_AGREEMENT_TEXT);
   const [customDocB, setCustomDocB] = useState(SAMPLE_OFFER_LETTER_TEXT);
-  const [nameA, setNameA] = useState('Sample Rental Agreement');
+  const [nameA, setNameA] = useState(uploadedDocTitle || 'Sample Rental Agreement');
   const [nameB, setNameB] = useState('Sample Offer Letter');
   const [showCustomInput, setShowCustomInput] = useState(false);
+  const [uploadingA, setUploadingA] = useState(false);
+  const [uploadingB, setUploadingB] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: 'A' | 'B') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadError(null);
+    if (target === 'A') setUploadingA(true);
+    else setUploadingB(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/parse', {
+        method: 'POST',
+        body: formData,
+      });
+      const json = await res.json();
+      if (res.ok && json.success && json.data) {
+        if (target === 'A') {
+          setNameA(json.data.filename);
+          setCustomDocA(json.data.text);
+        } else {
+          setNameB(json.data.filename);
+          setCustomDocB(json.data.text);
+        }
+      } else {
+        setUploadError(json.error || `Failed to parse ${file.name}`);
+      }
+    } catch {
+      setUploadError(`Network error uploading ${file.name}`);
+    } finally {
+      if (target === 'A') setUploadingA(false);
+      else setUploadingB(false);
+      e.target.value = '';
+    }
+  };
 
   const handleRunComparison = async () => {
     setLoading(true);
@@ -131,56 +175,152 @@ export function CompareView({
         {/* Custom Input Drawer */}
         {showCustomInput && (
           <div className="mt-6 p-5 bg-slate-50 border border-slate-200 rounded-xl space-y-4 animate-in fade-in duration-150">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-indigo-600" aria-hidden="true" />
-              <span>Custom Document Inputs for Semantic Comparison</span>
-            </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-indigo-600" aria-hidden="true" />
+                <span>Custom Document Inputs for Semantic Comparison</span>
+              </h3>
+              <span className="text-[11px] text-slate-500">
+                Upload files (.docx, .pdf, .txt) or paste contract text directly below
+              </span>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="doc-a-name" className="block text-xs font-semibold text-slate-700 mb-1">
-                  Document A Name:
-                </label>
-                <input
-                  id="doc-a-name"
-                  type="text"
-                  value={nameA}
-                  onChange={(e) => setNameA(e.target.value)}
-                  className="w-full text-xs p-2 border border-slate-300 rounded-md mb-2 bg-white"
-                />
-                <label htmlFor="doc-a-text" className="block text-xs font-semibold text-slate-700 mb-1">
-                  Document A Text:
-                </label>
-                <textarea
-                  id="doc-a-text"
-                  rows={6}
-                  value={customDocA}
-                  onChange={(e) => setCustomDocA(e.target.value)}
-                  className="w-full text-xs font-mono p-3 border border-slate-300 rounded-md bg-white focus:ring-2 focus:ring-indigo-500"
-                />
+            {uploadError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-800 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" aria-hidden="true" />
+                <span>{uploadError}</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Document A */}
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="doc-a-name" className="text-xs font-bold text-slate-800">
+                    Document A
+                  </label>
+                  <div className="flex items-center gap-2">
+                    {uploadedDocText && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNameA(uploadedDocTitle || 'Uploaded Contract');
+                          setCustomDocA(uploadedDocText);
+                        }}
+                        className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-md hover:bg-indigo-100 transition-colors"
+                        title="Use the document currently uploaded in the workspace"
+                      >
+                        <FileCheck className="w-3 h-3 text-indigo-600" aria-hidden="true" />
+                        <span>Use Uploaded Doc</span>
+                      </button>
+                    )}
+                    <label className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold bg-white border border-slate-300 rounded-md hover:bg-slate-50 cursor-pointer text-slate-700 transition-colors shadow-2xs">
+                      {uploadingA ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin text-indigo-600" aria-hidden="true" />
+                          <span>Extracting...</span>
+                        </>
+                      ) : (
+                        <>
+                          <UploadCloud className="w-3.5 h-3.5 text-indigo-600" aria-hidden="true" />
+                          <span>Upload DOCX / PDF</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept=".docx,.pdf,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                        onChange={(e) => handleFileUpload(e, 'A')}
+                        disabled={uploadingA}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="doc-a-name" className="block text-[11px] text-slate-500 mb-1">
+                    Document Title:
+                  </label>
+                  <input
+                    id="doc-a-name"
+                    type="text"
+                    value={nameA}
+                    onChange={(e) => setNameA(e.target.value)}
+                    className="w-full text-xs p-2 border border-slate-300 rounded-md bg-white focus:ring-2 focus:ring-indigo-500"
+                    placeholder="e.g. Tenancy Agreement v1"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="doc-a-text" className="block text-[11px] text-slate-500 mb-1">
+                    Contract Text:
+                  </label>
+                  <textarea
+                    id="doc-a-text"
+                    rows={7}
+                    value={customDocA}
+                    onChange={(e) => setCustomDocA(e.target.value)}
+                    className="w-full text-xs font-mono p-3 border border-slate-300 rounded-md bg-white focus:ring-2 focus:ring-indigo-500"
+                    placeholder="Paste or upload text of first contract..."
+                  />
+                </div>
               </div>
 
-              <div>
-                <label htmlFor="doc-b-name" className="block text-xs font-semibold text-slate-700 mb-1">
-                  Document B Name:
-                </label>
-                <input
-                  id="doc-b-name"
-                  type="text"
-                  value={nameB}
-                  onChange={(e) => setNameB(e.target.value)}
-                  className="w-full text-xs p-2 border border-slate-300 rounded-md mb-2 bg-white"
-                />
-                <label htmlFor="doc-b-text" className="block text-xs font-semibold text-slate-700 mb-1">
-                  Document B Text:
-                </label>
-                <textarea
-                  id="doc-b-text"
-                  rows={6}
-                  value={customDocB}
-                  onChange={(e) => setCustomDocB(e.target.value)}
-                  className="w-full text-xs font-mono p-3 border border-slate-300 rounded-md bg-white focus:ring-2 focus:ring-indigo-500"
-                />
+              {/* Document B */}
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="doc-b-name" className="text-xs font-bold text-slate-800">
+                    Document B
+                  </label>
+                  <label className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold bg-white border border-slate-300 rounded-md hover:bg-slate-50 cursor-pointer text-slate-700 transition-colors shadow-2xs">
+                    {uploadingB ? (
+                      <>
+                        <Loader2 className="w-3 h-3 animate-spin text-indigo-600" aria-hidden="true" />
+                        <span>Extracting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <UploadCloud className="w-3.5 h-3.5 text-indigo-600" aria-hidden="true" />
+                        <span>Upload DOCX / PDF</span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept=".docx,.pdf,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                      onChange={(e) => handleFileUpload(e, 'B')}
+                      disabled={uploadingB}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                <div>
+                  <label htmlFor="doc-b-name" className="block text-[11px] text-slate-500 mb-1">
+                    Document Title:
+                  </label>
+                  <input
+                    id="doc-b-name"
+                    type="text"
+                    value={nameB}
+                    onChange={(e) => setNameB(e.target.value)}
+                    className="w-full text-xs p-2 border border-slate-300 rounded-md bg-white focus:ring-2 focus:ring-indigo-500"
+                    placeholder="e.g. Counter Offer or Standard Template"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="doc-b-text" className="block text-[11px] text-slate-500 mb-1">
+                    Contract Text:
+                  </label>
+                  <textarea
+                    id="doc-b-text"
+                    rows={7}
+                    value={customDocB}
+                    onChange={(e) => setCustomDocB(e.target.value)}
+                    className="w-full text-xs font-mono p-3 border border-slate-300 rounded-md bg-white focus:ring-2 focus:ring-indigo-500"
+                    placeholder="Paste or upload text of second contract..."
+                  />
+                </div>
               </div>
             </div>
 
@@ -188,7 +328,7 @@ export function CompareView({
               <button
                 type="button"
                 onClick={handleRunComparison}
-                disabled={loading}
+                disabled={loading || uploadingA || uploadingB || !customDocA.trim() || !customDocB.trim()}
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm rounded-lg transition-colors shadow-xs disabled:opacity-50"
               >
                 {loading ? (

@@ -229,6 +229,140 @@ function analyzeCustomDocumentLocally(
     redFlagCount > 0 ? 'liability allocation, exit restrictions, and unilateral covenants' : 'operational commitments and notice periods'
   }.`;
 
+  // Generate tailored pre-signing checklist according to document type
+  let preSigningChecklist: ChecklistItem[] = [];
+  if (docType.includes('Employment') || docType.includes('Offer')) {
+    preSigningChecklist = [
+      {
+        id: 'chk-custom-1',
+        category: 'Compensation & Clawbacks',
+        item: 'Verify bonus or relocation repayment windows and clawback triggers',
+        explanation: 'Ensure clawbacks pro-rate over time and exempt termination without cause or company downsizing.',
+        priority: 'high',
+        completed: false,
+      },
+      {
+        id: 'chk-custom-2',
+        category: 'Intellectual Property',
+        item: 'Exempt personal side projects and existing open-source work in an IP carve-out exhibit',
+        explanation: 'Guarantees your personal creations outside work hours remain solely your intellectual property.',
+        priority: 'high',
+        completed: false,
+      },
+      {
+        id: 'chk-custom-3',
+        category: 'Notice & Mobility',
+        item: 'Confirm notice period symmetry and assess local enforceability of post-employment restrictions',
+        explanation: 'Protects career transitions from one-sided notice mandates or unreasonable non-competes.',
+        priority: 'medium',
+        completed: false,
+      },
+    ];
+  } else if (docType.includes('Lease') || docType.includes('Rental')) {
+    preSigningChecklist = [
+      {
+        id: 'chk-custom-1',
+        category: 'Security Deposit',
+        item: 'Request amendment of deposit return timeline to 15-30 days post-vacancy',
+        explanation: 'Avoids prolonged deposit withholding without interest or itemized receipts.',
+        priority: 'high',
+        completed: false,
+      },
+      {
+        id: 'chk-custom-2',
+        category: 'Dispute & Deductions',
+        item: 'Mandate itemized vendor receipts before any security deposit deductions',
+        explanation: 'Prevents arbitrary painting or cleaning fee deductions when moving out.',
+        priority: 'high',
+        completed: false,
+      },
+      {
+        id: 'chk-custom-3',
+        category: 'Privacy & Entry',
+        item: 'Ensure landlord entry notice requirement is at least 24 hours in writing',
+        explanation: 'Protects reasonable personal privacy and peaceful enjoyment of the leased premises.',
+        priority: 'medium',
+        completed: false,
+      },
+    ];
+  } else if (docType.includes('Non-Disclosure') || docType.includes('NDA')) {
+    preSigningChecklist = [
+      {
+        id: 'chk-custom-1',
+        category: 'Confidentiality Term',
+        item: 'Limit confidentiality obligations to a defined sunset period (e.g. 2-3 years)',
+        explanation: 'Avoids indefinite perpetual liability for trade secret definitions.',
+        priority: 'high',
+        completed: false,
+      },
+      {
+        id: 'chk-custom-2',
+        category: 'Scope Exclusions',
+        item: 'Confirm standard carve-outs for public domain or independently developed information',
+        explanation: 'Ensures publicly accessible information cannot be claimed as proprietary breach.',
+        priority: 'high',
+        completed: false,
+      },
+      {
+        id: 'chk-custom-3',
+        category: 'Remedies',
+        item: 'Review injunctive relief and liability indemnification provisions',
+        explanation: 'Prevents unilateral penalty assessments without judicial review.',
+        priority: 'medium',
+        completed: false,
+      },
+    ];
+  } else {
+    preSigningChecklist = [
+      {
+        id: 'chk-custom-1',
+        category: 'Termination Rights',
+        item: 'Ensure clear, bilateral termination provisions with defined cure periods',
+        explanation: 'Allows both parties reasonable advance notice before contract dissolution.',
+        priority: 'high',
+        completed: false,
+      },
+      {
+        id: 'chk-custom-2',
+        category: 'Indemnification & Liability',
+        item: 'Cap maximum aggregate liability to fees paid or a realistic mutual threshold',
+        explanation: 'Prevents uninsurable open-ended financial exposure for unintentional breach.',
+        priority: 'high',
+        completed: false,
+      },
+      {
+        id: 'chk-custom-3',
+        category: 'Dispute Resolution',
+        item: 'Verify impartial dispute resolution forum with shared arbitration expenses',
+        explanation: 'Guarantees equitable dispute proceedings rather than unilateral counterparty jurisdiction.',
+        priority: 'medium',
+        completed: false,
+      },
+    ];
+  }
+
+  const suggestedQuestions =
+    docType.includes('Employment') || docType.includes('Offer')
+      ? [
+          'Can the joining bonus or relocation clawback be pro-rated over 12 months rather than a 24-month cliff?',
+          'Will you append an exhibit exempting pre-existing personal open-source projects from IP assignment?',
+          'Under local labor law, is the post-employment non-compete covenant legally enforceable?',
+          'Can the notice period requirement be made mutually symmetric for both employer and employee?',
+        ]
+      : docType.includes('Lease') || docType.includes('Rental')
+      ? [
+          'Can the deposit refund window be shortened to 15 or 30 days following vacancy?',
+          'Will the agreement require itemized third-party vendor receipts for any deductions?',
+          'Can the landlord advance entry notice be increased to at least 24 hours?',
+          'Can we remove unilateral arbitrator appointment in favor of neutral statutory forum?',
+        ]
+      : [
+          `Can the notice and cure windows in "${clauses[0]?.title || 'the contract'}" be clarified in writing?`,
+          `Are the indemnification and liability terms in this ${docType.toLowerCase()} strictly mutual?`,
+          'What is the governing law and statutory jurisdiction in case of an unresolved dispute?',
+          'Does this agreement automatically renew, and what is the required opt-out deadline?',
+        ];
+
   return {
     docId: `doc-${Date.now()}`,
     title: detectedTitle,
@@ -245,10 +379,8 @@ function analyzeCustomDocumentLocally(
       redFlag: redFlagCount,
     },
     clauses,
-    suggestedQuestions: [
-      `Can notice periods or cure windows in "${clauses[0]?.title || 'the contract'}" be clarified in writing?`,
-      `Are the liability and penalty terms in this ${docType.toLowerCase()} strictly mutual?`,
-    ],
+    suggestedQuestions,
+    preSigningChecklist,
   };
 }
 

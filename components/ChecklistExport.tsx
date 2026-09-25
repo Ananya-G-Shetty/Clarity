@@ -20,42 +20,58 @@ interface ChecklistExportProps {
 
 export function ChecklistExport({ summary }: ChecklistExportProps) {
   const [checklist, setChecklist] = useState<ChecklistItem[]>(
-    summary.preSigningChecklist || [
-      {
-        id: 'chk-1',
-        category: 'Negotiation',
-        item: 'Request amendment of deposit return deadline to 15-30 days',
-        explanation: 'Reduces the landlord’s unilateral 90-day holding privilege.',
-        priority: 'high',
-        completed: false,
-      },
-      {
-        id: 'chk-2',
-        category: 'Remedies',
-        item: 'Strike clause waiving the right to dispute deductions exceeding 20%',
-        explanation: 'Preserves your right to challenge arbitrary or undocumented charges.',
-        priority: 'high',
-        completed: false,
-      },
-      {
-        id: 'chk-3',
-        category: 'Privacy',
-        item: 'Increase landlord entry notice from 12 hours to 24-48 hours',
-        explanation: 'Ensures reasonable personal privacy and scheduled inspections.',
-        priority: 'medium',
-        completed: false,
-      },
-    ]
+    summary.preSigningChecklist && summary.preSigningChecklist.length > 0
+      ? summary.preSigningChecklist
+      : [
+          {
+            id: 'chk-1',
+            category: 'Negotiation',
+            item: 'Verify cure periods and advance notice timelines before signing',
+            explanation: 'Ensures reasonable opportunity to address contractual contingencies.',
+            priority: 'high',
+            completed: false,
+          },
+          {
+            id: 'chk-2',
+            category: 'Remedies',
+            item: 'Confirm liability and indemnity provisions are balanced and mutual',
+            explanation: 'Preserves your right to challenge arbitrary or undocumented counterparty charges.',
+            priority: 'high',
+            completed: false,
+          },
+          {
+            id: 'chk-3',
+            category: 'Compliance',
+            item: 'Review dispute resolution and arbitration provisions with legal counsel',
+            explanation: 'Ensures equitable dispute proceedings rather than one-sided jurisdiction.',
+            priority: 'medium',
+            completed: false,
+          },
+        ]
   );
 
-  const lawyerQuestions: LawyerQuestion[] = summary.clauses
-    .filter((c) => c.riskLevel !== 'standard')
-    .map((c, i) => ({
-      id: `q-${i + 1}`,
-      clauseRef: `${c.title} (Clause ${c.clauseNumber || i + 1})`,
-      question: `Given the terms of ${c.title}, what is the customary statutory limit under local law, and what specific replacement clause should I counter with?`,
-      context: c.riskReason,
-    }));
+  const nonStandardClauses = summary.clauses.filter((c) => c.riskLevel !== 'standard');
+  const lawyerQuestions: LawyerQuestion[] =
+    nonStandardClauses.length > 0
+      ? nonStandardClauses.map((c, i) => ({
+          id: `q-${i + 1}`,
+          clauseRef: `${c.title} (Clause ${c.clauseNumber || i + 1})`,
+          question: `Given the terms of ${c.title}, what is the customary statutory limit under local law, and what specific replacement clause should I counter with?`,
+          context: c.riskReason,
+        }))
+      : (summary.suggestedQuestions && summary.suggestedQuestions.length > 0
+          ? summary.suggestedQuestions
+          : [
+              `Can the notice and operational obligations in "${summary.clauses[0]?.title || 'the contract'}" be clarified in writing?`,
+              'Are the liability and penalty terms in this agreement strictly mutual?',
+              'What is the governing law and statutory jurisdiction in case of an unresolved dispute?',
+            ]
+        ).map((q, i) => ({
+          id: `q-${i + 1}`,
+          clauseRef: summary.clauses[i]?.title || `Contract Clause ${i + 1}`,
+          question: q,
+          context: 'Consult legal counsel to ensure terms align with prevailing statutory limits and signer protections.',
+        }));
 
   const [copied, setCopied] = useState(false);
 
